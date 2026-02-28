@@ -1,0 +1,14 @@
+{
+  "id": "opencode-antigravity-auth",
+  "name": "Antigravity OAuth Plugin",
+  "description": "Google Antigravity OAuth for OpenClaw — Gemini 3, Claude Opus 4.6, no API key required",
+  "version": "1.0.0",
+  "providers": [
+    "google-antigravity"
+  ],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {}
+  }
+}

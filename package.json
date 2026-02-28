@@ -1,0 +1,33 @@
+{
+    "name": "openclaw-antigravity-oauth",
+    "version": "1.0.0",
+    "description": "OpenClaw plugin for Google Antigravity OAuth - Access Gemini 3 Pro, Flash, Claude Opus 4.6, Sonnet 4.6 with your Google account",
+    "license": "MIT",
+    "author": "WBBT Group (https://buymeacoffee.com/wbbt)",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wbbtmusic/openclaw-antigravity-oauth"
+    },
+    "keywords": [
+        "openclaw",
+        "opencode",
+        "antigravity",
+        "google",
+        "oauth",
+        "gemini",
+        "claude",
+        "plugin",
+        "ai",
+        "llm",
+        "gemini-3",
+        "claude-opus"
+    ],
+    "openclaw": {
+        "extensions": [
+            "openclaw-entry.js"
+        ]
+    },
+    "dependencies": {
+        "opencode-antigravity-auth": "^1.6.0"
+    }
+}
