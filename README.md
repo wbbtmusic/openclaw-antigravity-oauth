@@ -1,75 +1,49 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/🔐_OpenClaw_Antigravity_OAuth-Plugin-blueviolet?style=for-the-badge&labelColor=1a1a2e" alt="OpenClaw Antigravity OAuth Plugin" />
-</p>
+# OpenClaw Antigravity OAuth Plugin + API Proxy
 
-<h3 align="center">Access Gemini 3 Pro · Gemini 3.1 Pro · Gemini 3 Flash · Claude Opus 4.6 · Sonnet 4.6<br/>in OpenClaw — No API Key Required</h3>
+> **Access Gemini 3 Pro · Gemini 3.1 Pro · Gemini 3 Flash · Claude Opus 4.6 · Sonnet 4.6 in OpenClaw — No API Key Required**
 
-<p align="center">
-  <a href="https://buymeacoffee.com/wbbt"><img src="https://img.shields.io/badge/☕_Support_This_Project-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
-</p>
+Google removed the built-in `google-antigravity-auth` provider from OpenClaw v2026.2.x **and** changed the Cloud Code Assist API format. This plugin brings it back with a local API proxy that handles the new format.
 
-<p align="center">
-  <a href="https://github.com/wbbtmusic/openclaw-antigravity-oauth/stargazers"><img src="https://img.shields.io/github/stars/wbbtmusic/openclaw-antigravity-oauth?style=flat-square&color=yellow" /></a>
-  <a href="https://github.com/wbbtmusic/openclaw-antigravity-oauth/network/members"><img src="https://img.shields.io/github/forks/wbbtmusic/openclaw-antigravity-oauth?style=flat-square&color=blue" /></a>
-  <a href="https://github.com/wbbtmusic/openclaw-antigravity-oauth/issues"><img src="https://img.shields.io/github/issues/wbbtmusic/openclaw-antigravity-oauth?style=flat-square&color=orange" /></a>
-  <img src="https://img.shields.io/badge/OpenClaw-v2026.2.x-brightgreen?style=flat-square" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" />
-  <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white" />
-</p>
+```
+google-antigravity-auth
+```
+
+🚀 Zero API keys · Zero cost · Just your Google account
 
 ---
 
-Google removed the built-in `google-antigravity-auth` provider from **OpenClaw v2026.2.x**. This plugin brings it back as an external extension — authenticate with your Google account via OAuth and use Antigravity's full model catalog directly in OpenClaw.
+## ⚠️ Google API Format Change (March 2026)
 
-> **🚀 Zero API keys · Zero cost · Just your Google account**
+Google changed the Cloud Code Assist API payload structure. OpenClaw's built-in `google-antigravity` provider sends requests in the old format, causing **400 Bad Request** errors.
 
----
+**What changed:**
+- The API endpoint (`cloudcode-pa.googleapis.com/v1internal:generateContent`) now expects a different JSON structure
+- Old format: `{ httpBody: { data: "..." }, projectId: "..." }` → **Rejected**
+- New format: `{ project: "...", model: "...", request: { contents: [...] }, requestType: "agent" }` → **Works**
+- Response is now wrapped: `{ response: { candidates: [...] } }` instead of `{ candidates: [...] }`
 
-## ⚠️ IMPORTANT — Risk of Account Restriction
-
-> [!CAUTION]
-> **Using this plugin may violate Google's Terms of Service.**
-> A small number of users have reported their Google accounts being **banned or shadow-banned** when using unofficial Antigravity integrations.
-
-| Risk Level | Scenario |
-|:---:|---|
-| 🔴 **VERY HIGH** | Fresh / new Google accounts |
-| 🔴 **HIGH** | New accounts with Pro/Ultra subscriptions |
-| � **MODERATE** | Excessive API usage or unusual traffic patterns |
-| 🟢 **LOWER** | Established accounts with normal usage |
-
-**By using this plugin, you acknowledge:**
-- ❌ This is an **unofficial tool**, not endorsed by Google
-- ❌ Your Google account **may be suspended or permanently banned**
-- ❌ You **assume all risks** associated with using this plugin
-- ❌ The authors are **not responsible** for any consequences
-
-> 💡 **Recommendation:** Use an established Google account that you don't rely on for critical services.
+**This plugin solves it** by running a lightweight local proxy that:
+1. Accepts requests from OpenClaw in OpenAI format
+2. Translates them to Google's new Cloud Code Assist format
+3. Sends them to `cloudcode-pa.googleapis.com` with correct headers
+4. Translates the response back to OpenAI format
 
 ---
 
 ## 🎯 Available Models
 
-<table>
-<tr>
-<th colspan="4" align="center">🟣 Antigravity Quota — Google Models</th>
-</tr>
-<tr><th>Model ID</th><th>Name</th><th>Context</th><th>Max Output</th></tr>
-<tr><td><code>gemini-3-pro-high</code></td><td>Gemini 3 Pro (High Thinking)</td><td>1M</td><td>65K</td></tr>
-<tr><td><code>gemini-3-pro-low</code></td><td>Gemini 3 Pro (Low Thinking)</td><td>1M</td><td>65K</td></tr>
-<tr><td><code>gemini-3.1-pro-high</code></td><td>Gemini 3.1 Pro (High)</td><td>1M</td><td>65K</td></tr>
-<tr><td><code>gemini-3.1-pro-low</code></td><td>Gemini 3.1 Pro (Low)</td><td>1M</td><td>65K</td></tr>
-<tr><td><code>gemini-3-flash</code></td><td>Gemini 3 Flash</td><td>1M</td><td>65K</td></tr>
-<tr>
-<th colspan="4" align="center">🔵 Antigravity Quota — Claude Models (via Google)</th>
-</tr>
-<tr><th>Model ID</th><th>Name</th><th>Context</th><th>Max Output</th></tr>
-<tr><td><code>claude-opus-4-6-thinking</code></td><td>Claude Opus 4.6 (Thinking)</td><td>200K</td><td>64K</td></tr>
-<tr><td><code>claude-opus-4-5-thinking</code></td><td>Claude Opus 4.5 (Thinking)</td><td>200K</td><td>64K</td></tr>
-<tr><td><code>claude-sonnet-4-6</code></td><td>Claude Sonnet 4.6</td><td>200K</td><td>64K</td></tr>
-</table>
-
-> All models accessed via **Google Antigravity's OAuth** — no API keys, no billing.
+| Model | Provider | Type |
+|-------|----------|------|
+| `gemini-3-flash` | Google | Fast reasoning |
+| `gemini-3-pro-high` | Google | High quality |
+| `gemini-3-pro-low` | Google | Balanced |
+| `gemini-3.1-pro-high` | Google | Latest Pro |
+| `gemini-3.1-pro-low` | Google | Latest Pro balanced |
+| `claude-opus-4-6-thinking` | Anthropic | Deep reasoning |
+| `claude-opus-4-5-thinking` | Anthropic | Reasoning |
+| `claude-sonnet-4-6` | Anthropic | Fast |
+| `claude-sonnet-4-5` | Anthropic | Fast |
+| `gpt-oss-120b-medium` | OpenAI OSS | Open source |
 
 ---
 
@@ -81,124 +55,98 @@ Google removed the built-in `google-antigravity-auth` provider from **OpenClaw v
 curl -sL https://raw.githubusercontent.com/wbbtmusic/openclaw-antigravity-oauth/main/install.sh | bash
 ```
 
-Then authenticate:
-
-```bash
-openclaw models auth login --provider google-antigravity
-```
-
 ### Option B — Manual Install
 
-<details>
-<summary><strong>📋 Click to expand step-by-step instructions</strong></summary>
-
-#### Step 1 — Clone the Repository
-
 ```bash
+# 1. Clone plugin
 git clone https://github.com/wbbtmusic/openclaw-antigravity-oauth.git \
   ~/.openclaw/extensions/opencode-antigravity-auth
+
 cd ~/.openclaw/extensions/opencode-antigravity-auth
-```
 
-#### Step 2 — Install Dependencies
-
-```bash
+# 2. Install dependencies
 npm install --production
+
+# 3. Create dist symlink (if needed)
+ln -sf "$(pwd)/node_modules/opencode-antigravity-auth/dist" dist
+
+# 4. Deploy the API proxy
+cp antigravity-proxy.mjs ~/.openclaw/antigravity-proxy.mjs
+
+# 5. Create systemd service
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/antigravity-proxy.service << EOF
+[Unit]
+Description=Antigravity API Proxy (OpenClaw)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=$(command -v node) $HOME/.openclaw/antigravity-proxy.mjs
+Restart=always
+RestartSec=5
+Environment=NODE_NO_WARNINGS=1
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user enable antigravity-proxy.service
+systemctl --user start antigravity-proxy.service
+
+# 6. Register plugin in openclaw.json
+# Add "opencode-antigravity-auth": true to plugins.entries
+# Set google-antigravity provider baseUrl to http://127.0.0.1:51199/v1
+# See install.sh for the full config
 ```
-
-#### Step 3 — Add Plugin to Config
-
-Edit `~/.openclaw/openclaw.json`:
-
-```jsonc
-{
-  "plugins": {
-    "entries": {
-      "opencode-antigravity-auth": {
-        "enabled": true
-      }
-    }
-  }
-}
-```
-
-> ⚠️ **Remove** any old `google-antigravity-auth` entry — that was the bundled version.
-
-#### Step 4 — Add Models to Config
-
-In `agents.defaults.models`:
-
-```jsonc
-"google-antigravity/gemini-3-pro-high": {},
-"google-antigravity/gemini-3-pro-low": {},
-"google-antigravity/gemini-3.1-pro-high": {},
-"google-antigravity/gemini-3.1-pro-low": {},
-"google-antigravity/gemini-3-flash": {},
-"google-antigravity/claude-opus-4-6-thinking": {},
-"google-antigravity/claude-opus-4-5-thinking": {},
-"google-antigravity/claude-sonnet-4-6": {}
-```
-
-Set fallbacks:
-
-```jsonc
-"model": {
-  "primary": "google-antigravity/gemini-3-flash",
-  "fallbacks": [
-    "google-antigravity/gemini-3.1-pro-high",
-    "google-antigravity/claude-opus-4-6-thinking"
-  ]
-}
-```
-
-</details>
 
 ---
 
 ## 🔑 Authentication Flow
 
+After installation, log in with your Google account:
+
+```bash
+openclaw models auth login --provider google-antigravity
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    YOUR TERMINAL (SSH)                       │
-│                                                             │
-│  $ openclaw models auth login --provider google-antigravity │
-│                                                             │
-│  🔗 Open this URL in your browser:                          │
-│  https://accounts.google.com/o/oauth2/v2/auth?...           │
-│                                                             │
-│  Paste redirect URL: █                                      │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │   BROWSER   │
-                    │  (any PC)   │
-                    ├─────────────┤
-                    │ 1. Open URL │
-                    │ 2. Sign in  │
-                    │    Google   │
-                    │ 3. Copy the │
-                    │  redirect   │
-                    │    URL      │
-                    └──────┬──────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│  Paste redirect URL: http://localhost:51121/oauth-callb...   │
-│                                                             │
-│  🔄 Exchanging token...                                     │
-│  ✅ Token received!                                          │
-│  ✅ OAuth successful! Email: you@gmail.com                   │
-└─────────────────────────────────────────────────────────────┘
+
+1. A URL opens in your browser (or prints in terminal for headless servers)
+2. Sign in with your Google account
+3. Authorize the Antigravity scopes
+4. The callback saves your OAuth tokens
+
+### ⚠️ Critical: Add projectId
+
+After login, you **must** add `projectId` to your auth profile, or token refresh will fail:
+
+```bash
+python3 -c "
+import json
+f = '$HOME/.openclaw/agents/main/agent/auth-profiles.json'
+d = json.load(open(f))
+for k,v in d.get('profiles',{}).items():
+  if 'antigravity' in k: v['projectId'] = 'rising-fact-p41fc'
+json.dump(d, open(f,'w'), indent=2)
+print('projectId added successfully')
+"
+```
+
+Then restart:
+
+```bash
+systemctl --user restart openclaw-gateway.service
 ```
 
 ### 🖥️ Headless Server (VPS / No Browser)
 
-1. Run the auth command on your server
-2. Copy the OAuth URL from the terminal
-3. Open it in a browser **on your local machine**
-4. After signing in, the browser redirects to `localhost:51121/...` 
-   - The page will fail to load — **that's expected!**
-5. Copy the URL from the address bar anyway
-6. Paste it back in the SSH terminal
+On a headless server, the OAuth URL won't auto-open. Copy the printed URL, open it in any browser, complete login, then copy the redirect URL from your browser's address bar (even if the page shows an error) and paste it in the terminal.
+
+The redirect goes to `localhost:51121` — use SSH port forwarding if needed:
+
+```bash
+ssh -L 51121:localhost:51121 user@your-server
+```
 
 ---
 
@@ -206,10 +154,18 @@ Set fallbacks:
 
 ```bash
 # Restart gateway
-openclaw gateway restart          # or: pm2 restart openclaw
+systemctl --user restart openclaw-gateway.service
+
+# Verify proxy is running
+curl -s http://127.0.0.1:51199/health
 
 # Verify models
 openclaw models list | grep antigravity
+
+# Test with a direct API call
+curl -s -X POST http://127.0.0.1:51199/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gemini-3-flash","messages":[{"role":"user","content":"Hello!"}]}'
 
 # Set default model (optional)
 openclaw config set agents.defaults.model.primary google-antigravity/gemini-3-flash
@@ -219,43 +175,40 @@ openclaw config set agents.defaults.model.primary google-antigravity/gemini-3-fl
 
 ## 🛠️ Troubleshooting
 
-<details>
-<summary><strong>"plugin removed: google-antigravity-auth"</strong></summary>
+### "OAuth token refresh failed"
 
-This means you still have the old bundled plugin entry. Remove it:
+The auth profile is missing `projectId`. Run the python command in the Authentication section above.
 
+### "400 Bad Request" or "Unknown name"
+
+The proxy is not running or not configured correctly:
 ```bash
-nano ~/.openclaw/openclaw.json
-# Delete "google-antigravity-auth" from plugins.entries
-# Keep "opencode-antigravity-auth"
+# Check proxy status
+systemctl --user status antigravity-proxy.service
+
+# Check proxy logs
+journalctl --user -u antigravity-proxy.service -n 20 --no-pager
+
+# Restart proxy
+systemctl --user restart antigravity-proxy.service
 ```
 
-</details>
+### "Missing token" or "No API key"
 
-<details>
-<summary><strong>"Unknown provider: google-antigravity"</strong></summary>
+You haven't logged in yet:
+```bash
+openclaw models auth login --provider google-antigravity
+```
 
-Checklist:
-- [ ] Plugin files in `~/.openclaw/extensions/opencode-antigravity-auth/`
-- [ ] `npm install` was run in the plugin directory
-- [ ] `openclaw.plugin.json` exists
-- [ ] OpenClaw was restarted
+### Plugin conflicts
 
-</details>
-
-<details>
-<summary><strong>OAuth redirect fails on headless server</strong></summary>
-
-The redirect goes to `localhost:51121` — on a headless server this won't open. Copy the URL from your browser's address bar (even if the page shows an error) and paste it in the terminal.
-
-</details>
-
-<details>
-<summary><strong>"invalid_grant" error</strong></summary>
-
-Authorization code expired. Run the auth flow again — codes are single-use and expire quickly.
-
-</details>
+If you see errors about `google-antigravity-auth` (the old bundled plugin):
+```bash
+# Edit openclaw.json
+nano ~/.openclaw/openclaw.json
+# Remove "google-antigravity-auth" from plugins.entries
+# Keep "opencode-antigravity-auth"
+```
 
 ---
 
@@ -263,13 +216,14 @@ Authorization code expired. Run the auth flow again — codes are single-use and
 
 ```
 opencode-antigravity-auth/
-├── 🔑 openclaw-entry.js          # OpenClaw wrapper (register API bridge)
-├── 📋 openclaw.plugin.json       # Plugin manifest
-├── 📦 package.json               # npm config + openclaw.extensions
-├── 🚀 install.sh                 # One-line installer
-├── 📄 LICENSE                    # MIT
-├── 📖 README.md                  # This file
-└── 📁 dist/                      # Core OAuth (from opencode-antigravity-auth)
+├── 🔑 openclaw-entry.js         # OpenClaw wrapper (register API bridge)
+├── 📋 openclaw.plugin.json      # Plugin manifest
+├── 📦 package.json              # npm config + openclaw.extensions
+├── 🚀 install.sh                # One-line installer (v2.0 with proxy)
+├── 🌐 antigravity-proxy.mjs     # API proxy (OpenAI ↔ Google format)
+├── 📄 LICENSE                   # MIT
+├── 📖 README.md                 # This file
+└── 📁 dist/                     # Core OAuth (from opencode-antigravity-auth)
     └── src/
         ├── antigravity/oauth.js  # Google OAuth PKCE flow
         ├── constants.js          # Client IDs, endpoints
@@ -282,56 +236,44 @@ opencode-antigravity-auth/
 
 ```
 ┌───────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   OpenClaw    │────▶│  openclaw-entry   │────▶│  Google OAuth    │
-│  register()   │     │  .js (wrapper)    │     │  PKCE Flow      │
-└───────────────┘     └──────────────────┘     └────────┬────────┘
-                              │                          │
-                              │ configPatch              │ access_token
-                              ▼                          ▼
-                      ┌──────────────────┐     ┌─────────────────┐
-                      │  Model Catalog   │     │  Antigravity    │
-                      │  (8 models)      │     │  API Endpoint   │
-                      └──────────────────┘     └─────────────────┘
+│   OpenClaw    │────▶│  openclaw-entry   │────▶│  Google OAuth   │
+│ register()    │     │  .js (wrapper)    │     │  PKCE Flow      │
+└───────┬───────┘     └──────────────────┘     └────────┬────────┘
+        │                                               │
+        │ API request                                   │ access_token
+        ▼                                               ▼
+┌───────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  OpenClaw     │────▶│ antigravity-     │────▶│  Google Cloud   │
+│ openai-compat │     │ proxy.mjs        │     │  Code Assist    │
+│ request       │     │ (format bridge)  │     │  API            │
+└───────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
-1. **OAuth Flow** — Uses Google OAuth 2.0 with PKCE
-2. **Token Exchange** — Custom handler bypasses gzip issues
-3. **Provider Registration** — Registers via `api.registerProvider()`
-4. **Model Injection** — Injects catalog via `configPatch`
-5. **API Adapter** — Uses OpenClaw's native `google-generative-ai` adapter
+### Flow:
+1. **OAuth Flow** — Uses Google OAuth 2.0 with PKCE via `openclaw-entry.js`
+2. **Token Storage** — Saved in `~/.openclaw/agents/main/agent/auth-profiles.json`
+3. **API Proxy** — `antigravity-proxy.mjs` listens on port 51199
+4. **Format Translation** — Converts OpenAI `chat/completions` → Google `v1internal:generateContent`
+5. **Auto Refresh** — Proxy auto-refreshes expired tokens using the refresh_token
+6. **Provider Config** — OpenClaw treats `google-antigravity` as an OpenAI-compatible provider pointing to the local proxy
 
----
+### Why a Proxy?
 
-## 🤝 Compatibility
+Google changed the Cloud Code Assist API format in early 2026. The old `google-generative-ai` adapter in OpenClaw sends requests in the standard Gemini format (`{ contents: [...] }`), but the Antigravity endpoint now expects a wrapper (`{ project, model, request: { contents }, requestType }`). A proxy is the cleanest solution because:
 
-| Platform | Status |
-|:---|:---:|
-| OpenClaw v2026.2.x | ✅ |
-| OpenClaw v2026.1.x (ClawdBot) | ✅ |
-| Linux (Ubuntu/Debian) | ✅ |
-| macOS | ✅ |
-| Windows (WSL) | ✅ |
-| Headless VPS | ✅ |
-| Node.js 18+ | ✅ |
+- **No OpenClaw source modification** — Works with any OpenClaw version
+- **Auto-updates** — When Google changes the format again, only the proxy needs updating
+- **Token management** — Handles refresh independently of OpenClaw's internal logic
+- **Version agnostic** — Works whether the built-in provider is blocked or not
 
 ---
 
 ## 📝 Credits
 
-- **OAuth engine**: [opencode-antigravity-auth](https://www.npmjs.com/package/opencode-antigravity-auth) on npm
-- **OpenClaw wrapper**: Custom bridge for OpenClaw's `register(api)` system
-- **Maintained by**: [WBBT Group](https://github.com/wbbtmusic)
+- [OpenClaw](https://github.com/openclaw/openclaw) — The AI coding assistant
+- Google Cloud Code Assist — The underlying API
+- WBBT Music — Plugin maintenance
 
----
+## 📄 License
 
-<p align="center">
-  <a href="https://buymeacoffee.com/wbbt"><img src="https://img.shields.io/badge/☕_Enjoyed_this%3F_Buy_us_a_coffee!-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
-</p>
-
-<p align="center">
-  <sub>MIT License · do whatever you want with it</sub>
-</p>
-
----
-
-<sub>**Keywords**: openclaw plugin, google antigravity, oauth, gemini 3 pro, gemini 3.1 pro, gemini 3 flash, claude opus 4.6, claude sonnet 4.6, opencode, clawdbot, moltbot, free ai models, no api key, google oauth plugin, headless vps, antigravity auth</sub>
+MIT — see [LICENSE](LICENSE)
