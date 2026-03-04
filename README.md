@@ -16,7 +16,7 @@ Google removed the built-in `google-antigravity-auth` provider from OpenClaw **a
 ```
 
 > 💖 **Love this plugin?** Help keep it alive and maintained!  
-> **[☕ Support the developer (Donate via Shopier)](https://shopier.com/wbbtmusic)**
+> **[☕ Buy Me a Coffee](https://buymeacoffee.com/wbbt)**
 
 </div>
 
@@ -391,7 +391,7 @@ A proxy is the cleanest solution because:
 
 > 💖 **Did this plugin save your workflow?**  
 > Consider supporting its development!
-> **[☕ Donate via Shopier (Credit Card / Local Payments)](https://shopier.com/wbbtmusic)**
+> **[☕ Buy Me a Coffee](https://buymeacoffee.com/wbbt)**
 
 ## 📄 License
 
