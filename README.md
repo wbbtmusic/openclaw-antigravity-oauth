@@ -15,6 +15,9 @@ Google removed the built-in `google-antigravity-auth` provider from OpenClaw **a
 🚀 Zero API keys · Zero cost · Just your Google account
 ```
 
+> 💖 **Love this plugin?** Help keep it alive and maintained!  
+> **[☕ Support the developer (Donate via Shopier)](https://shopier.com/wbbtmusic)**
+
 </div>
 
 ---
@@ -322,7 +325,7 @@ opencode-antigravity-auth/
 ├── 📋 openclaw.plugin.json       # Plugin manifest
 ├── 📦 package.json               # npm config + openclaw.extensions
 ├── 🚀 install.sh                 # One-line installer (v2.0 with proxy)
-├── 🌐 antigravity-proxy.mjs      # API proxy (OpenAI ↔ Google format)
+├── 🌐 antigravity-proxy.mjs      # API proxy (Native Tools + True Streaming)
 ├── 📄 LICENSE                    # MIT
 ├── 📖 README.md                  # This file
 └── 📁 dist/                      # Core OAuth (from opencode-antigravity-auth)
@@ -364,6 +367,11 @@ opencode-antigravity-auth/
 
 Google changed the Cloud Code Assist API format in early 2026. The old `google-generative-ai` adapter in OpenClaw sends requests in the standard Gemini format (`{ contents: [...] }`), but the Antigravity endpoint now expects a wrapper (`{ project, model, request: { contents }, requestType }`).
 
+**✨ v11 Proxy Features:**
+- **True Streaming:** Uses a custom chunk parser to process Google's nested array Server-Sent Events in real-time.
+- **Native Agent Persona:** Correctly maps OpenClaw's internal `system` roles to Google's strict `systemInstruction` field, ensuring the AI retains its tool-use capabilities.
+- **Flawless Tool Calling:** Translates Google `functionCall` arrays into the exact two-part chunked specification (Initialization + Arguments) required by the OpenAI SDK handler in OpenClaw, preventing "tool not found" crashes.
+
 A proxy is the cleanest solution because:
 
 - 🔌 **No OpenClaw source modification** — Works with any OpenClaw version
@@ -378,6 +386,12 @@ A proxy is the cleanest solution because:
 - [OpenClaw](https://github.com/openclaw/openclaw) — The AI coding assistant
 - Google Cloud Code Assist — The underlying API
 - [WBBT Music](https://github.com/wbbtmusic) — Plugin maintenance
+
+---
+
+> 💖 **Did this plugin save your workflow?**  
+> Consider supporting its development!
+> **[☕ Donate via Shopier (Credit Card / Local Payments)](https://shopier.com/wbbtmusic)**
 
 ## 📄 License
 
