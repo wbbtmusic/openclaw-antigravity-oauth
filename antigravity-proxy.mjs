@@ -24,15 +24,23 @@ function logDbg(msg) {
     fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg}\n`);
 }
 
+let _activeProfileKey = null;
+
 function readToken() {
     try {
         const data = JSON.parse(fs.readFileSync(AUTH_FILE, "utf-8"));
-        for (const [k, v] of Object.entries(data.profiles || {})) {
-            if (k.toLowerCase().includes("antigravity")) {
-                const c = v.credential || v;
-                if (c.access) return { access_token: c.access, refresh_token: c.refresh || "", expires_at: c.expires || 0 };
-            }
-        }
+        const profiles = Object.entries(data.profiles || {}).filter(
+            ([k, v]) => k.toLowerCase().includes("antigravity") && (v.credential || v).access
+        );
+        if (profiles.length === 0) return null;
+
+        // Rotate hourly: pick profile based on current hour
+        const idx = new Date().getHours() % profiles.length;
+        const [key, v] = profiles[idx];
+        _activeProfileKey = key;
+        const c = v.credential || v;
+        logDbg(`ACCOUNT ROTATION: using ${key.split(":")[1] || key} (slot ${idx}/${profiles.length})`);
+        return { access_token: c.access, refresh_token: c.refresh || "", expires_at: c.expires || 0 };
     } catch { }
     return null;
 }
@@ -40,16 +48,14 @@ function readToken() {
 function saveToken(t) {
     try {
         const data = JSON.parse(fs.readFileSync(AUTH_FILE, "utf-8"));
-        for (const [k, v] of Object.entries(data.profiles || {})) {
-            if (k.toLowerCase().includes("antigravity")) {
-                const target = v.credential && v.credential.access ? v.credential : v;
-                target.access = t.access_token;
-                if (t.refresh_token) target.refresh = t.refresh_token;
-                target.expires = t.expires_at;
-                fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2));
-                return;
-            }
-        }
+        const key = _activeProfileKey || Object.keys(data.profiles || {}).find(k => k.toLowerCase().includes("antigravity"));
+        if (!key) return;
+        const v = data.profiles[key];
+        const target = v.credential && v.credential.access ? v.credential : v;
+        target.access = t.access_token;
+        if (t.refresh_token) target.refresh = t.refresh_token;
+        target.expires = t.expires_at;
+        fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2));
     } catch (e) { }
 }
 
