@@ -367,10 +367,14 @@ opencode-antigravity-auth/
 
 Google changed the Cloud Code Assist API format in early 2026. The old `google-generative-ai` adapter in OpenClaw sends requests in the standard Gemini format (`{ contents: [...] }`), but the Antigravity endpoint now expects a wrapper (`{ project, model, request: { contents }, requestType }`).
 
-**✨ v11 Proxy Features:**
+**✨ v11 Proxy Features & Bug Fixes:**
+- **Proxy Version Bypass:** Google blocked old client versions from accessing newer models (returning `400 Bad Request` or "upgrade to latest version"). This proxy spoofs the latest `Antigravity/1.19.6` client headers to bypass the block.
+- **Thinking Models Support:** Automatically bridges OpenAI's compatibility format into Google's proprietary `thinkingConfig` payload. Fully supports **Gemini 3.1 Pro** (`thinkingLevel: high`) and **Claude Sonnet/Opus 4.6** (`thinking_budget: 32768`).
+- **Comprehensive Schema Sanitization:** Drops unsupported JSON Schema fields (like `patternProperties`, `additionalProperties`) that cause the Google API to fail.
+- **Alias Parameter Stripping:** Resolves "tool not found" or "invalid argument" loops for the core `edit` tool by removing cross-model aliases (e.g., `file_path`, `old_string`) before passing tool schemas to Gemini.
 - **True Streaming:** Uses a custom chunk parser to process Google's nested array Server-Sent Events in real-time.
 - **Native Agent Persona:** Correctly maps OpenClaw's internal `system` roles to Google's strict `systemInstruction` field, ensuring the AI retains its tool-use capabilities.
-- **Flawless Tool Calling:** Translates Google `functionCall` arrays into the exact two-part chunked specification (Initialization + Arguments) required by the OpenAI SDK handler in OpenClaw, preventing "tool not found" crashes.
+- **Flawless Tool Calling:** Translates Google `functionCall` arrays into the exact two-part chunked specification (Initialization + Arguments) required by the OpenAI SDK handler in OpenClaw.
 
 A proxy is the cleanest solution because:
 

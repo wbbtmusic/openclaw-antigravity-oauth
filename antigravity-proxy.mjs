@@ -19,7 +19,7 @@ const ENDPOINTS = [
     "https://daily-cloudcode-pa.sandbox.googleapis.com",
 ];
 
-fs.writeFileSync(LOG_FILE, `=== Proxy v11 Started ${new Date().toISOString()} ===\n`);
+fs.appendFileSync(LOG_FILE, `\n=== Proxy v11 Started ${new Date().toISOString()} ===\n`);
 function logDbg(msg) {
     fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg}\n`);
 }
@@ -86,6 +86,48 @@ function extractText(content) {
     return String(content || "");
 }
 
+// Sanitize parameters to comply with Google Cloud Code API requirements
+function sanitizeParamsForGoogle(params) {
+    if (!params || typeof params !== 'object') return params;
+
+    // 1) Remove JSON Schema fields Google doesn't support
+    const UNSUPPORTED = [
+        'patternProperties', 'additionalProperties', '$schema', '$id',
+        '$ref', '$defs', 'definitions', 'if', 'then', 'else',
+        'allOf', 'oneOf', 'anyOf', 'not', 'const', 'default',
+        'examples', 'readOnly', 'writeOnly', 'deprecated',
+        'minProperties', 'maxProperties', 'dependentRequired',
+        'dependentSchemas', 'unevaluatedProperties', 'title',
+    ];
+    for (const key of UNSUPPORTED) {
+        if (params[key] !== undefined) delete params[key];
+    }
+
+    // 2) Strip internal aliases
+    const ALIASES = ['file_path', 'old_string', 'new_string', 'old_str', 'new_str'];
+    if (params.properties) {
+        for (const alias of ALIASES) {
+            if (params.properties[alias]) {
+                delete params.properties[alias];
+                if (params.required) {
+                    params.required = params.required.filter(r => r !== alias);
+                }
+            }
+        }
+        // 3) Recursively sanitize nested properties
+        for (const key of Object.keys(params.properties)) {
+            params.properties[key] = sanitizeParamsForGoogle(params.properties[key]);
+        }
+    }
+
+    // 4) Sanitize items in arrays
+    if (params.items) {
+        params.items = sanitizeParamsForGoogle(params.items);
+    }
+
+    return params;
+}
+
 function convertOpenAIToGoogleFormat(parsedInfo) {
     const model = (parsedInfo.model || "gemini-3-flash").replace("google-antigravity/", "").replace("antigravity/", "").replace("models/", "");
     const contents = [];
@@ -149,7 +191,7 @@ function convertOpenAIToGoogleFormat(parsedInfo) {
     if (parsedInfo.tools && parsedInfo.tools.length > 0) {
         const functionDeclarations = parsedInfo.tools.filter(t => t.type === "function").map(t => {
             const tool = { name: t.function.name, description: t.function.description || "" };
-            if (Object.keys(t.function.parameters || {}).length > 0) tool.parameters = t.function.parameters;
+            if (Object.keys(t.function.parameters || {}).length > 0) tool.parameters = sanitizeParamsForGoogle(JSON.parse(JSON.stringify(t.function.parameters)));
             return tool;
         });
         if (functionDeclarations.length > 0) req.request.tools = [{ functionDeclarations }];
@@ -202,6 +244,11 @@ const server = http.createServer(async (req, res) => {
 
             const cleanModel = (parsed.model || "gemini-3-flash").replace("google-antigravity/", "").replace("antigravity/", "");
 
+            // Log incoming requests
+            const toolNames = (parsed.tools || []).map(t => t.function?.name).filter(Boolean);
+            const msgRoles = (parsed.messages || []).map(m => m.role);
+            logDbg(`INCOMING: model=${cleanModel} tools=[${toolNames.join(',')}] msgs=${msgRoles.join(',')}`);
+
             const googleReq = convertOpenAIToGoogleFormat(parsed);
             const requestBody = JSON.stringify(googleReq);
 
@@ -247,7 +294,9 @@ const server = http.createServer(async (req, res) => {
                     let activeToolIdx = 0;
 
                     googleRes.on("data", (chunk) => {
-                        buffer += chunk.toString();
+                        const chunkStr = chunk.toString();
+                        buffer += chunkStr;
+                        logDbg(`RAW[${chunkStr.length}]: ${chunkStr.substring(0, 500)}`);
 
                         while (true) {
                             let startIndex = buffer.indexOf('{"response"');
@@ -291,17 +340,12 @@ const server = http.createServer(async (req, res) => {
                                             })}\n\n`);
                                         }
 
-                                        // Handle Tools! This is the fix.
                                         if (part.functionCall !== undefined) {
                                             const fc = part.functionCall;
-                                            // Native tool name could be mangled, e.g. if the model hallucinates it.
-                                            // But if it's missing entirely from the list Google sends, we shouldn't fail.
-                                            // OpenAI streaming tools: Send ID and name FIRST, then arguments
-
                                             const toolId = `call_${Date.now()}_${activeToolIdx}`;
                                             const argsStr = typeof fc.args === 'string' ? fc.args : JSON.stringify(fc.args || {});
 
-                                            // Part 1: ID and Name
+                                            // Stream part 1: Tool ID and Name
                                             const deltaName = {
                                                 tool_calls: [{
                                                     index: activeToolIdx,
@@ -319,7 +363,7 @@ const server = http.createServer(async (req, res) => {
                                                 choices: [{ index: 0, delta: deltaName, finish_reason: null }]
                                             })}\n\n`);
 
-                                            // Part 2: Arguments (Can be streamed, but we have them all at once)
+                                            // Stream part 2: Arguments
                                             const deltaArgs = {
                                                 tool_calls: [{
                                                     index: activeToolIdx,
